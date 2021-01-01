@@ -1,0 +1,564 @@
+# -*- coding: utf-8 -*-
+# 作者:             朱婷
+# 创建时间:          2020/11/4 10:38
+# 
+
+import requests
+
+# pip install lxml
+from lxml import etree
+from collections import OrderedDict
+
+from urllib.parse import quote
+
+import csv
+
+import traceback
+
+import random
+
+import re
+
+from time import sleep
+
+import os
+
+from datetime import datetime, timedelta
+import sys
+import json
+Cookie = 'SUB=_2A25yozz3DeRhGeBM6VAW-S3Fzj-IHXVubES_rDV6PUJbktANLU72kW1NRO9wVQvEpVT9Nu2wMiylJBDHHjADNbGk; SUBP=0033WrSXqPxfM725Ws9jqgMF55529P9D9W5oIyY9VjWlUOH64SC..JS25NHD95QceozES0.01K-0Ws4Dqcjci--ci-zRi-zRi--Ni-zXi-8Fi--Ni-i2iK.Ni--fiKnfi-z7i--NiKLWiKnXi--fi-88i-zc; SSOLoginState=1604799655; _T_WM=61732189726; WEIBOCN_FROM=1110006030; MLOGIN=1; XSRF-TOKEN=d351aa; M_WEIBOCN_PARAMS=luicode%3D20000174%26uicode%3D20000174'
+#Cookie = '_T_WM=a7322296c925650d1059a42fc00f42bf; SUB=_2A25ypi2_DeRhGeBM6VAW-S3Fzj-IHXVuaLP3rDV6PUJbktANLXLmkW1NRO9wVXzpjGu08cxT6s6VbGmwR3mir4yE; SUBP=0033WrSXqPxfM725Ws9jqgMF55529P9D9W5oIyY9VjWlUOH64SC..JS25NHD95QceozES0.01K-0Ws4Dqcjci--ci-zRi-zRi--Ni-zXi-8Fi--Ni-i2iK.Ni--fiKnfi-z7i--NiKLWiKnXi--fi-88i-zc; SSOLoginState=1604476399改成你自己的 Cookie'
+Source = 'https://weibo.cn'
+Sentitive_word = 'keyword'
+
+User_Agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36'
+
+
+
+
+class WeiboTopicScrapy():
+
+    def __init__(self, keyword, filter, start_time, end_time,limit_numbers):
+        self.headers = {
+            'Cookie': Cookie,
+            'User_Agent': User_Agent
+        }
+        self.keyword = keyword
+        self.filter = filter  # 1: 原创微博； 0：所有微博
+        self.start_time = time_params_formatter(start_time, offset_hour=-8)
+        self.end_time = time_params_formatter(end_time, offset_day=-1, offset_hour=-7)
+        self.got_num = 0  # 爬取到的微博数
+        self.weibo = []  # 存储爬取到的所有微博信息
+        self.limit_number=limit_numbers
+        if not os.path.exists('topic'):
+            os.mkdir('topic')
+        self.run()
+
+    def deal_html(self, url):
+        """处理html"""
+        try:
+            html = requests.get(url, headers=self.headers).content
+            selector = etree.HTML(html)
+            return selector
+        except Exception as e:
+            print('Error: ', e)
+            traceback.print_exc()
+
+    def deal_garbled(self, info):
+        """处理乱码"""
+        try:
+            info = (info.xpath('string(.)').replace(u'\u200b', '').encode(
+                sys.stdout.encoding, 'ignore').decode(sys.stdout.encoding))
+            return info
+        except Exception as e:
+            print('Error: ', e)
+            traceback.print_exc()
+
+    def get_long_weibo(self, weibo_link):
+        """获取长原创微博"""
+        try:
+            selector = self.deal_html(weibo_link)
+            info = selector.xpath("//div[@class='c']")[1]
+            wb_content = self.deal_garbled(info)
+            wb_time = info.xpath("//span[@class='ct']/text()")[0]
+            weibo_content = wb_content[wb_content.find(':') +
+                                       1:wb_content.rfind(wb_time)]
+            return weibo_content
+        except Exception as e:
+            print('Error: ', e)
+            traceback.print_exc()
+
+    def get_original_weibo(self, info, weibo_id):
+        """获取原创微博"""
+        try:
+            weibo_content = self.deal_garbled(info)
+            weibo_content = weibo_content[:weibo_content.rfind(u'赞')]
+            a_text = info.xpath('div//a/text()')
+            if u'全文' in a_text:
+                weibo_link = 'https://weibo.cn/comment/' + weibo_id
+                wb_content = self.get_long_weibo(weibo_link)
+                if wb_content:
+                    weibo_content = wb_content
+            return weibo_content
+        except Exception as e:
+            print('Error: ', e)
+            traceback.print_exc()
+
+    def get_long_retweet(self, weibo_link):
+        """获取长转发微博"""
+        try:
+            wb_content = self.get_long_weibo(weibo_link)
+            weibo_content = wb_content[:wb_content.rfind('原文转发')]
+            return weibo_content
+        except Exception as e:
+            print('Error: ', e)
+            traceback.print_exc()
+
+    def get_retweet(self, info, weibo_id):
+        """获取转发微博"""
+        try:
+            original_user = info.xpath("div/span[@class='cmt']/a/text()")
+            if not original_user:
+                wb_content = '转发微博已被删除'
+                return wb_content
+            else:
+                original_user = original_user[0]
+            wb_content = self.deal_garbled(info)
+            wb_content = wb_content[wb_content.find(':') +
+                                    1:wb_content.rfind('赞')]
+            wb_content = wb_content[:wb_content.rfind('赞')]
+            a_text = info.xpath('div//a/text()')
+            if '全文' in a_text:
+                weibo_link = 'https://weibo.cn/comment/' + weibo_id
+                weibo_content = self.get_long_retweet(weibo_link)
+                if weibo_content:
+                    wb_content = weibo_content
+            retweet_reason = self.deal_garbled(info.xpath('div')[-1])
+            retweet_reason = retweet_reason[:retweet_reason.rindex('赞')]
+            wb_content = (retweet_reason + '\n' + '原始用户: ' + original_user +
+                          '\n' + '转发内容: ' + wb_content)
+            return wb_content
+        except Exception as e:
+            print('Error: ', e)
+            traceback.print_exc()
+
+    def get_weibo_content(self, info, is_original):
+        """获取微博内容"""
+        try:
+            weibo_id = info.xpath('@id')[0][2:]
+            
+            if is_original:
+                weibo_content = self.get_original_weibo(info, weibo_id)
+            else:
+                weibo_content = self.get_retweet(info, weibo_id)
+            #print(weibo_content)
+            return weibo_content
+        except Exception as e:
+            print('Error: ', e)
+            traceback.print_exc()
+
+    def get_publish_place(self, info):
+        """获取微博发布位置"""
+        try:
+            div_first = info.xpath('div')[0]
+            a_list = div_first.xpath('a')
+            publish_place = '无'
+            for a in a_list:
+                if ('place.weibo.com' in a.xpath('@href')[0]
+                        and a.xpath('text()')[0] == '显示地图'):
+                    weibo_a = div_first.xpath("span[@class='ctt']/a")
+                    if len(weibo_a) >= 1:
+                        publish_place = weibo_a[-1]
+                        if ('视频' == div_first.xpath(
+                                "span[@class='ctt']/a/text()")[-1][-2:]):
+                            if len(weibo_a) >= 2:
+                                publish_place = weibo_a[-2]
+                            else:
+                                publish_place = '无'
+                        publish_place = self.deal_garbled(publish_place)
+                        break
+            #print('微博发布位置: ' + publish_place)
+            return publish_place
+        except Exception as e:
+            print('Error: ', e)
+            traceback.print_exc()
+
+    def get_publish_time(self, info):
+        """获取微博发布时间"""
+        try:
+            str_time = info.xpath("div/span[@class='ct']")
+            str_time = self.deal_garbled(str_time[0])
+            publish_time = str_time.split('来自')[0]
+            if '刚刚' in publish_time:
+                publish_time = datetime.now().strftime('%Y-%m-%d %H:%M')
+            elif '分钟' in publish_time:
+                minute = publish_time[:publish_time.find('分钟')]
+                minute = timedelta(minutes=int(minute))
+                publish_time = (datetime.now() -
+                                minute).strftime('%Y-%m-%d %H:%M')
+            elif '今天' in publish_time:
+                today = datetime.now().strftime('%Y-%m-%d')
+                time = publish_time[3:]
+                publish_time = today + ' ' + time
+            elif '月' in publish_time:
+                year = datetime.now().strftime('%Y')
+                month = publish_time[0:2]
+                day = publish_time[3:5]
+                time = publish_time[7:12]
+                publish_time = year + '-' + month + '-' + day + ' ' + time
+            else:
+                publish_time = publish_time[:16]
+            #print('微博发布时间: ' + publish_time)
+            return publish_time
+        except Exception as e:
+            print('Error: ', e)
+            traceback.print_exc()
+
+    def get_publish_tool(self, info):
+        """获取微博发布工具"""
+        try:
+            str_time = info.xpath("div/span[@class='ct']")
+            str_time = self.deal_garbled(str_time[0])
+            if len(str_time.split('来自')) > 1:
+                publish_tool = str_time.split(u'来自')[1]
+            else:
+                publish_tool = '无'
+            #print('微博发布工具: ' + publish_tool)
+            return publish_tool
+        except Exception as e:
+            print('Error: ', e)
+            traceback.print_exc()
+
+    def get_weibo_footer(self, info):
+        """获取微博点赞数、转发数、评论数"""
+        try:
+            footer = {}
+            pattern = r'\d+'
+            str_footer = info.xpath('div')[-1]
+            str_footer = self.deal_garbled(str_footer)
+            str_footer = str_footer[str_footer.rfind('赞'):]
+            weibo_footer = re.findall(pattern, str_footer, re.M)
+
+            up_num = int(weibo_footer[0])
+            #print('点赞数: ' + str(up_num))
+            footer['up_num'] = up_num
+
+            retweet_num = int(weibo_footer[1])
+            #print('转发数: ' + str(retweet_num))
+            footer['retweet_num'] = retweet_num
+
+            comment_num = int(weibo_footer[2])
+            #print('评论数: ' + str(comment_num))
+            footer['comment_num'] = comment_num
+            return footer
+        except Exception as e:
+            print('Error: ', e)
+            traceback.print_exc()
+
+    def extract_picture_urls(self, info, weibo_id):
+        #print('开始提取图片 URL')
+        """提取微博原始图片url"""
+        try:
+            a_list = info.xpath('./div/a/@href')
+            all_pic = 'https://weibo.cn/mblog/picAll/' + weibo_id + '?rl=1'
+            if all_pic in a_list:
+                selector = self.deal_html(all_pic)
+                preview_picture_list = selector.xpath('//img/@src')
+                picture_list = [
+                    p.replace('/thumb180/', '/large/')
+                    for p in preview_picture_list
+                ]
+                picture_urls = ','.join(picture_list)
+                #print(picture_urls)
+            else:
+                picture_urls = '无'
+                # return picture_urls
+                # if info.xpath('.//img/@src'):
+                #     preview_picture = info.xpath('.//img/@src')[-1]
+                #     picture_urls = preview_picture.replace(
+                #             '/wap180/', '/large/')
+                # else:
+                #     sys.exit(
+                #             "爬虫微博可能被设置成了'不显示图片'，请前往"
+                #             "'https://weibo.cn/account/customize/pic'，修改为'显示'"
+                #     )
+            return picture_urls
+        except Exception as e:
+            print('Error: ', e)
+            traceback.print_exc()
+
+    def get_picture_urls(self, info, is_original):
+        """获取微博原始图片url"""
+        try:
+            weibo_id = info.xpath('@id')[0][2:]
+            picture_urls = {}
+            if is_original:
+                original_pictures = self.extract_picture_urls(info, weibo_id)
+                picture_urls['original_pictures'] = original_pictures
+                if not self.filter:
+                    picture_urls['retweet_pictures'] = '无'
+            else:
+                retweet_url = info.xpath("div/a[@class='cc']/@href")[0]
+                retweet_id = retweet_url.split('/')[-1].split('?')[0]
+                retweet_pictures = self.extract_picture_urls(info, retweet_id)
+                picture_urls['retweet_pictures'] = retweet_pictures
+                a_list = info.xpath('div[last()]/a/@href')
+                original_picture = '无'
+                for a in a_list:
+                    if a.endswith(('.gif', '.jpeg', '.jpg', '.png')):
+                        original_picture = a
+                        break
+                picture_urls['original_pictures'] = original_picture
+            return picture_urls
+        except Exception as e:
+            print('Error: ', e)
+            traceback.print_exc()
+
+    def get_publisher_info(self, link):
+        response = requests.get(url=link, headers=self.headers)
+        html = self.deal_html(link)
+        user_info = html.xpath('//div[@class="ut"]/span[@class="ctt"]')[0]
+        user_info = user_info.xpath('string(.)').strip()
+        # 去掉  \xa0
+        user_info = ' '.join(user_info.split())
+        kindex = user_info.index(' ')
+        username = user_info[:kindex]
+        sex = user_info[kindex + 1:user_info.index('/')]
+        province = user_info[user_info.index('/') + 1:user_info.rindex(' ')]
+
+        following = html.xpath('//div[@class="tip2"]/a[1]/text()')[0]
+        following = following[3:-1]
+        followd = html.xpath('//div[@class="tip2"]/a[2]/text()')[0]
+        followd = followd[3:-1]
+        # print(link, followd)
+        return username, sex, province, following, followd
+
+    def get_one_weibo(self, info):###########修改
+        """获取一条微博的全部信息"""
+        try:
+            weibo = OrderedDict()
+            is_original = False if len(info.xpath("div/span[@class='cmt']")) > 3 else True
+            if (not self.filter) or is_original:
+                weibo['source']=Source  #############修改
+                weibo['publish_time'] = self.get_publish_time(info)  # 微博发布时间
+                sstring=self.get_weibo_content(info, is_original) 
+                weibo['content'] = sstring  # 微博内容
+                result = re.findall(".*#(.*)#.*",sstring)
+                results=''
+                for x in result:
+                    results+=x
+                weibo['topic']=results #话题
+                weibo['sensitive_word']=Sensitive_word
+                weibo['theme']=results #主题，文章标题
+                weibo['id'] = info.xpath('@id')[0][2:]
+                # weibo['publisher'] = info.xpath('div/a/text()')[0]
+                footer = self.get_weibo_footer(info)
+                weibo['up_num'] = footer['up_num']  # 微博点赞数
+                weibo['retweet_num'] = footer['retweet_num']  # 转发数
+                weibo['comment_num'] = footer['comment_num']  # 评论数
+                publisher_link = info.xpath('div/a/@href')[0]
+
+                weibo['publisher_name'], weibo['publisher_sex'], weibo['publisher_province'], \
+                weibo['publisher_following'], weibo['publisher_followed'] = self.get_publisher_info(publisher_link)
+                
+                weibo['publish_place'] = self.get_publish_place(info)  # 微博发布位置
+               
+                weibo['publish_tool'] = self.get_publish_tool(info)  # 微博发布工具
+                
+                
+                print("话题：",results)
+                
+                #picture_urls = self.get_picture_urls(info, is_original)
+                #weibo['original_pictures'] = picture_urls[
+                #    'original_pictures']  # 原创图片url
+                #if not self.filter:
+                #    weibo['retweet_pictures'] = picture_urls[
+                #        'retweet_pictures']  # 转发图片url
+                #    weibo['original'] = is_original  # 是否原创微博
+                    
+            else:
+                weibo = None
+            return weibo
+        except Exception as e:
+            print('Error: ', e)
+            traceback.print_exc()
+
+    def write_csv(self, wrote_num):
+        """将爬取的信息写入csv文件"""
+        try:
+            result_headers = [
+                'source',
+                'public_time',
+                'content',
+                'topic',
+                'sensitive_word',
+                'theme',
+                'id',
+                'up_num',
+                'retweet_num',
+                'comment_num',
+                'nickname',
+                'sex',
+                'province',
+                'following',
+                'followed',
+                'publish_place',
+                'publish_tool'
+            ]
+            #if not self.filter:
+                #result_headers.insert(14, '被转发微博原始图片url')
+                #result_headers.insert(15, '是否为原创微博')
+            result_data = [w.values() for w in self.weibo][wrote_num:]
+
+            with open('topic/' + self.keyword + '.csv', 'a', encoding='utf-8-sig', newline='') as f:
+                writer = csv.writer(f)
+                if wrote_num == 0:
+                    writer.writerows([result_headers])
+                writer.writerows(result_data)
+            print('%d条微博写入csv文件完毕:' % self.got_num)
+        except Exception as e:
+            print('Error: ', e)
+            traceback.print_exc()
+
+    def run(self):
+
+        wrote_num = 0
+        page1 = 0
+        random_pages = random.randint(1, 5)
+        pageNum = self.limit_number
+
+        for page in range(1, pageNum):
+            #print('\n\n第{}页....\n'.format(page))
+            Referer = 'https://weibo.cn/search/mblog?hideSearchFrame=&keyword={}&page={}'.format(quote(self.keyword),page - 1)
+            headers = {
+                'Cookie': Cookie,
+                'User-Agent': User_Agent,
+                'Referer': Referer
+            }
+            params = {
+                'hideSearchFrame': '',
+                'keyword': self.keyword,
+                'advancedfilter': '1',
+                'starttime': self.start_time,
+                'endtime': self.end_time,
+                'sort': 'time',
+                'page': page
+            }
+            
+            #res = requests.get(url='https://weibo.cn/search/mblog')
+            #res.encoding='utf-8'
+            #print("keyword:",self.keyword)
+            res = requests.get(url='https://weibo.cn/search/mblog', params=params, headers=headers)
+            #res.encoding='utf-8'
+            global Source
+            Source=res.url
+            #print("URL正确编码：",Source)
+            #print("文本编码:",res.encoding)
+            html = etree.HTML(res.text.encode('utf-8'))
+            
+            try:
+                weibos = html.xpath("//div[@class='c' and @id]")
+
+                # 自动结束
+                if len(weibos) == 0:
+                    print('自动结束，大概率是因为内容爬完了，也请留意是否是 cookie 失效等情况\n')
+                    break
+
+                for i in range(0, len(weibos)):
+
+                    aweibo = self.get_one_weibo(info=weibos[i])  ####修改
+                    if aweibo:
+                        self.weibo.append(aweibo)
+                        self.got_num += 1
+                        #print('-' * 100)
+
+                if page % 3 == 0 and self.got_num > wrote_num:  # 每爬3页写入一次文件
+                    self.write_csv(wrote_num)
+                    wrote_num = self.got_num
+
+                # 通过加入随机等待避免被限制。爬虫速度过快容易被系统限制(一段时间后限
+                # 制会自动解除)，加入随机等待模拟人的操作，可降低被系统限制的风险。默
+                # 认是每爬取1到5页随机等待6到10秒，如果仍然被限，可适当增加sleep时间
+                if page - page1 == random_pages and page < pageNum:
+                    sleep(random.randint(6, 10))
+                    page1 = page
+                    # random_pages = random.randint(1, 5)
+                    random_pages = random.randint(1, 3)
+
+            except:
+                print(traceback.format_exc())
+                # print(res.text)
+
+        if self.got_num > wrote_num:
+            self.write_csv(wrote_num)  # 将剩余不足3页的微博写入文件
+        if not self.filter:
+            print('共爬取' + str(self.got_num) + '条微博')
+        else:
+            print('共爬取' + str(self.got_num) + '条原创微博')
+
+
+def get_offset_date(days):
+    # 获取当前时间
+    today = datetime.now()
+    base_day = datetime(year=2016, month=1, day=1)
+    # 计算偏移量
+    offset = timedelta(days=days)
+    # 获取想要的日期的时间
+    res_date = (base_day + offset).strftime('%Y%m%d')
+    return res_date
+
+
+# days = 205
+# WeiboTopicScrapy(keyword=keyword, filter=1, start_time=get_offset_date(days=days), end_time=get_offset_date(days=days+5))
+
+def time_params_formatter(params_time, offset_day=0, offset_hour=-8):
+    [temp_year, temp_month, temp_day, temp_hour] = [int(e) for e in params_time.split('-')]
+    print(temp_year)
+    temp_date = datetime(year=temp_year, month=temp_month, day=temp_day, hour=temp_hour)
+    temp_offset = timedelta(days=offset_day, hours=offset_hour)
+    res_time = (temp_date + temp_offset).strftime('%Y-%m-%d-%H')
+    return res_time
+
+
+
+
+
+#------------------------------------------------------------------------------------------
+# 新浪微博爬取接口：朱婷 
+DEFAULT_START_TIME = datetime.now() - timedelta(days=30) 
+DEFAULT_END_TIME = datetime.now()  
+  
+def sina_crawl(keys, url_cnt=10, start_time=DEFAULT_START_TIME, end_time=DEFAULT_END_TIME): 
+    #print("start_time:",DEFAULT_START_TIME)
+    global Sensitive_word
+    Sensitive_word=keys
+    WeiboTopicScrapy(keyword=keys, filter=1, start_time=start_time.strftime('%Y-%m-%d-%H'), end_time=end_time.strftime('%Y-%m-%d-%H'),limit_numbers=url_cnt)
+    filepath="topic/"+keys+'.csv'
+    #print(filepath)
+    out = process_sina(filepath)
+    #print(out)
+    return out
+def process_sina(filepath):
+    file_path =filepath
+    csvfile = open(file_path, 'r',encoding='utf-8')
+    fieldnames = ('source', 'public_time', 'content', 'topic', 'sensitive_word', 'theme', 'id', 'up_num', 'retweet_num', 'comment_num',
+              'followed')
+    #新增的数据项：
+    #id:用户账号
+    #up_num:点赞数
+    #retweet_num：转发量
+    #comment_num：评论量
+    #followed：粉丝数
+    
+    reader = csv.DictReader(csvfile, fieldnames)
+    data_list = [row for row in reader]
+    out = json.dumps(data_list[1:], ensure_ascii=False)
+    return out
+#    jsonfile.write(out)
+
+if __name__ == '__main__':
+    # filter = 0 爬取所有微博，filter = 1 爬取原创微博
+    keyword = '美国总统大选'
+    #print("start_time:",DEFAULT_START_TIME.strftime('%Y-%m-%d-%H'))
+    sina_crawl(keys=keyword, url_cnt=4, start_time=DEFAULT_START_TIME, end_time=DEFAULT_END_TIME)
+    
