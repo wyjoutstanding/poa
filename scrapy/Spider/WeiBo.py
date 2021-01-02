@@ -558,7 +558,7 @@ def process_sina(filepath):
 
 if __name__ == '__main__':
     # filter = 0 爬取所有微博，filter = 1 爬取原创微博
-    keyword = '美国总统大选'
+    keyword = '元旦'
     #print("start_time:",DEFAULT_START_TIME.strftime('%Y-%m-%d-%H'))
     sina_crawl(keys=keyword, url_cnt=4, start_time=DEFAULT_START_TIME, end_time=DEFAULT_END_TIME)
     

@@ -25,7 +25,7 @@ def stat_websites_hotspot(csv_filename):
 # 热点排行榜
 def stat_ranking_list(csv_filename):
     df = pd.DataFrame(pd.read_csv(csv_filename))
-    top_topic = df['topic'].head(10).tolist()
+    top_topic = df['topic'].head(20).tolist()
     value = []
     for i in range(len(top_topic)):
         value.append(random.randint(65,100))
