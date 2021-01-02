@@ -22,8 +22,6 @@
 # 日期时间
 from datetime import datetime, timedelta
 from time import mktime, sleep
-# 网页去重工具--布隆过滤器 安装命令: pip install pybloom_live
-from pybloom_live import ScalableBloomFilter, BloomFilter
 # 中文符号转URL编码操作库---res = quote(....,encodeing='GBK')
 from urllib.parse import quote, unquote
 from urllib.request import urlopen, Request
@@ -38,21 +36,6 @@ from Spider.until import websites, untils, csvTool
 import random
 import csv
 
-
-
-# 可自动扩容的布隆过滤器
-bloom = ScalableBloomFilter(initial_capacity=100, error_rate=0.001)
-#####################################
-## 博隆过滤器使用方法 ##
-# url1 = 'http://www.baidu.com'
-# url2 = 'http://qq.com'
-#
-# bloom.add(url1) # 添加 url
-#
-# url in bloom 即可判断 url 是否重复
-# #print(url1 in bloom)
-# #print(url2 in bloom)
-#####################################
 
 DEFAULT_START_TIME = datetime.now() - timedelta(days=30)
 DEFAULT_END_TIME = datetime.now()
@@ -93,7 +76,7 @@ def time_check( url_time):
 
 
 #获取当前页面内容并换页
-def get_ten(urls, count, url_cnt=10, max_cnt= 10, start_time=DEFAULT_START_TIME,
+def get_ten(urls, count, writer, url_cnt=10, max_cnt= 10, start_time=DEFAULT_START_TIME,
                 end_time=DEFAULT_END_TIME):
     try:
 
@@ -129,18 +112,17 @@ def get_ten(urls, count, url_cnt=10, max_cnt= 10, start_time=DEFAULT_START_TIME,
             if len(text) == 0:
                 text = html.xpath('string(//*[@id="'+ str(count[0]) +'"]/div/div/div/span)')
             
-            item.append([title,time,url,text])
+            csvTool.write_csv(writer , [ "", time, text, title, url])
             
             if count[0] % (url_cnt) == 0:
                 if count[0] >= max_cnt:
                     #print("结束")
                     #file.close()
-                    return item
+                    return 
                 sleep(random.random()*8)
                 next_url = html.xpath('string(//*[@id="page"]/div/a[contains(text(),"下一页")]/@href)')
                 next_url = "http://www.baidu.com"+next_url
-                get_ten(next_url, count, url_cnt, max_cnt, start_time, end_time)    
-        return item        
+                get_ten(next_url, count, writer, url_cnt, max_cnt, start_time, end_time)            
     except error.URLError as e:
         pass            
 
@@ -151,16 +133,21 @@ def topTen(keys, url_cnt=10, max_cnt= 10,start_time=DEFAULT_START_TIME,
 
     url_key = quote(keys, encoding='utf8')
     #url_key = keys
+    filename = keys + "_TOP10.csv"
+    f = open(filename, "w+", encoding='utf-8')
+    writer = csv.writer(f)
     count = [0]
-    i = 0
+    csvTool.write_csv(writer)
+
     search_result_url = r"http://www.baidu.com/s?rtt=1&bsst=1&cl=2&tn=news&ie=utf-8&word=" + url_key
     #print (search_result_url)
-    return get_ten(search_result_url, count, url_cnt, max_cnt, start_time, end_time)
+    get_ten(search_result_url, count, writer, url_cnt, max_cnt, start_time, end_time)
     
+    f.close()
 
     
 
 if __name__ == "__main__":
-    baidu_crawl("元旦", websites.huanqiu)
+    topTen("元旦")
     #time_check("2020年12月29日 17:28")
     # get_baidu_info_keys("https://baidu.baidu.com/p/6862614326")
