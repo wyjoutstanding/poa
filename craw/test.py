@@ -210,7 +210,7 @@ def qq_info(url):
         text = tool.clean(text)
         print(text)
         if len(text) == 0:
-        return "ERROR_NONTEXT"
+            return "ERROR_NONTEXT"
         return text  
     else:  
         response = urlopen(url)
@@ -222,7 +222,7 @@ def qq_info(url):
         text = tool.clean(text)
         print(text)
         if len(text) == 0:
-        return "ERROR_NONTEXT"
+            return "ERROR_NONTEXT"
         return text  
 
 
@@ -292,7 +292,7 @@ def xinhua_info(url):
     
     text = tool.clean(text)
     print(text)
-    if len(text) == 0:
+    if len(text) == 0 :
         return "ERROR_NONTEXT"
     return text
 
@@ -301,6 +301,6 @@ def xinhua_info(url):
 if __name__ == "__main__":
     #info()
     #baijiahao_info('http://cache.baidu.com/c?m=2F7sTj5CuNkgQZooEFYyHZ8t9ny8jJINyC6Hb8-3atlkC2OGgm5e296IwWH-lQbAhhOMbweRPVwbHt0Gk6IBCMGLepepD4bbiglne_Kp1HawNA7kqe5X_vu2-b1qGkxhpai4ck8K4yYupwiT4A9jUKF6hzDNIk5bsoUv82rjXh7&p=c3769a478cd511a05cf3db364c&newp=9a769a47c08911a05ca2d03a4553d8265f15ed6728818b783b83d309c839074e4765e7b121251707d7ce68216cee1e1ee5a76a242149&s=cfcd208495d565ef&user=baidu&fm=sc&query=%D4%AA%B5%A9+site%3Abaidu%2Ecom&qid=c667528b0004acfe&p1=1')
-    fenghuang_info('http://cache.baiducontent.com/c?m=k-W75B5Zafb4qdTdrfv0DzfddjtN1DX0F0Q_P9-ydzSAbcZ4YRrTLiHGoePs6keYG7DEJlJTLGpjc7M10rffRONRJYH7qrlVnMwt62-htKS&p=8b2a9753ce9b0bef08e2943e4c&newp=c377c54ad68912a05ab9f8664f53d8265f15ed623ec3864e1290c408d23f061d4866e0bf2d241703d0c1777347c2080ba8ff612e6149&s=8eb92db0d591d7ea&user=baidu&fm=sc&query=%D4%AA%B5%A9+site%3Aifeng%2Ecom&qid=afa9904a002cd54f&p1=41')
+    xinhua_info('http://cache.baiducontent.com/c?m=sio7i_E6aZir7Pt59fs7DHCELPZSP-tfyJ5rjGb4fAa6XBF2Z5t871fh4xyIrQ_cIJHFcRohaF03Zqp-SNuBKytp_Nvu5Rw1x6ZPgyAIRMMVjbhAnROwkppKx0KG6PWnLzLcDo5xSAC-hFZyVWqFOa&p=9d71c64ad4934ea94b81cf6253&newp=882a931385cc43fb44f38c245353d8265f15ed673ec3864e1290c408d23f061d4866e0bf2d241703d0c1777347c2080ba8ff612e6155&s=c9f0f895fb98ab91&user=baidu&fm=sc&query=%D4%AA%B5%A9+site%3Awww%2Exinhuanet%2Ecom/&qid=cff31220000c0539&p1=11')
     #time_check("2020年12月29日 17:28")
     # get_baidu_info_keys("https://baidu.baidu.com/p/6862614326")

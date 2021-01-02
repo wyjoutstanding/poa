@@ -57,8 +57,14 @@ def get_hotspot():
     返回热点消息列表：{url,summary}
     '''
     # test_data = {"hotspot": [{"url":"http://www.baidu.com", "summary":"热点时间列表"}, {"url":"http://www.baidu.com", "summary":"热点时间列表"}]}
-    test_data = {"url":['url1', 'url2'], "summary":['text1', 'text2']}
-    return json.dumps(test_data)
+    # test_data = {"url":['url1', 'url2'], "summary":['text1', 'text2']}
+    topic, url, summary = data_analysis.stat_hotspot(CSV_FILENAME_HOTSPOT)
+    data = {
+        "topic" : topic,
+        "url": url,
+        "summary": summary
+    }
+    return json.dumps(data)
 
 @api_bp.route('/get_ranking_list/')
 def get_ranking_list():

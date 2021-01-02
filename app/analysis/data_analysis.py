@@ -33,13 +33,20 @@ def stat_ranking_list(csv_filename):
     # print()
     return top_topic, value
 
-    
+def stat_hotspot(csv_filename):
+    df = pd.DataFrame(pd.read_csv(csv_filename))
+    url = df['url'].head(10).tolist()
+    topic  =df['topic'].head(10).tolist()
+    summary = df['content'].head(10).tolist()
+    return topic, url, summary
+
 # def stat_total_hotspot(csv_filename):
 #     df = pd.DataFrame(pd.read_csv(csv_filename))
 #     df1 = df.groupby("")
 if __name__ == "__main__":
     print(stat_websites_hotspot(CSV_FILENAME_BAIDU))
     print(stat_ranking_list(CSV_FILENAME_BAIDU))
+    print(stat_hotspot(CSV_FILENAME_HOTSPOT))
     # print(stat_websites_hotspot(FILE))
     # print(stat_ranking_list(FILE))
 # print(url_cnt)

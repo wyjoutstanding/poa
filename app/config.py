@@ -11,7 +11,7 @@ CSV_FILENAME_BAIDU = "/home/wyj/poa/craw/元旦.csv"
 CSV_FILENAME_BAIDU_FLAG = False
 
 # 焦点排序的数据
-CSV_FILENAME_HOTSPOT = ""
+CSV_FILENAME_HOTSPOT = "/home/wyj/poa/craw/元旦_TOP10.csv"
 CSV_FILENAME_HOTSPOT_FLAG = False
 
 # 微博数据
