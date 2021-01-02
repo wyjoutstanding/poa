@@ -31,8 +31,8 @@ import ssl
 
 # 正则操作库
 import re
-from Spider.until import websites, untils, csvTool
-#from until import websites, untils, csvTool
+#from Spider.until import websites, untils, csvTool
+from until import websites, untils, csvTool
 import random
 import csv
 
@@ -106,13 +106,21 @@ def get_ten(urls, count, writer, url_cnt=10, max_cnt= 10, start_time=DEFAULT_STA
             #print(title)
             url = html.xpath('string(/html/body/div/div[3]/div[1]/div[4]/div[2]/div['+ str(count[0]) +']/div/h3/a/@href)')
             #print(url)
+            # 来源处理逻辑
+            source = ''
+            if "baijiahao.baidu.com" in url:
+                source = "百家号"
+            else:
+                source = html.xpath('string(//*[@id="'+ str(count[0]) +'"]/div/div/div[2]/div/span[1]|//*[@id="'+ str(count[0]) +'"]/div/div/div/div/span[1])')
+            
+            print(source)
             
             text = html.xpath('string(//*[@id="'+ str(count[0]) +'"]/div/div/div[2]/span)')
             #无配图的另一种情况
             if len(text) == 0:
                 text = html.xpath('string(//*[@id="'+ str(count[0]) +'"]/div/div/div/span)')
             
-            csvTool.write_csv(writer , [ "", time, text, title, url])
+            csvTool.write_csv(writer , [ source, time, text, title, url])
             
             if count[0] % (url_cnt) == 0:
                 if count[0] >= max_cnt:
