@@ -38,17 +38,17 @@ if __name__ == "__main__":
     
     t = []
     fname = []
-    t.append( MyThread(baidu_crawl, args=(key, websites.bajiahao, 10, 100)) )
+    t.append( MyThread(baidu_crawl, args=(key, websites.bajiahao, 10, 40)) )
     fname.append(key+websites.bajiahao+".tmp")
-    t.append( MyThread(baidu_crawl, args=(key, websites.qq, 10, 100)) )
+    t.append( MyThread(baidu_crawl, args=(key, websites.qq, 10, 40)) )
     fname.append(key+websites.qq+".tmp")
-    t.append( MyThread(baidu_crawl, args=(key, websites.people, 10, 100)) )
+    t.append( MyThread(baidu_crawl, args=(key, websites.people, 10, 40)) )
     fname.append(key+websites.people+".tmp")
-    t.append( MyThread(baidu_crawl, args=(key, websites.fenghuang, 10, 100)) )
+    t.append( MyThread(baidu_crawl, args=(key, websites.fenghuang, 10, 40)) )
     fname.append(key+websites.fenghuang+".tmp")
-    t.append( MyThread(baidu_crawl, args=(key, websites.xinhua, 10, 100)) )
+    t.append( MyThread(baidu_crawl, args=(key, websites.xinhua, 10, 40)) )
     fname.append(key+websites.xinhua+".tmp")  
-    t.append( MyThread(baidu_crawl, args=(key, websites.huanqiu, 10, 100)) )
+    t.append( MyThread(baidu_crawl, args=(key, websites.huanqiu, 10, 40)) )
     fname.append(key+websites.huanqiu+".tmp")
 
 

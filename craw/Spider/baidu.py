@@ -136,15 +136,21 @@ def get_baidu_info(urls, count, website, writer, url_cnt=10, max_cnt= 10, start_
                 print("URL: "+info_url)
                 sleep(3)
                 if (website == websites.bajiahao):
-                    info = baijiahao_info(info_url)
+                    if info_url:
+                        info = baijiahao_info(info_url)
                     #file.write('百家号\n')
+                    else: 
+                        info = text
                     if info:
                         write_csv(writer, ['百家号', time, info, title, url])
                     else:
                         write_csv(writer, ['百家号', time, text, title, url])
 
                 elif(website == websites.qq):
-                    info = qq_info(info_url)
+                    if info_url:
+                        info = qq_info(info_url)
+                    else: 
+                        info = text
                     #file.write('腾讯新闻\n')
                     if info:
                         write_csv(writer, ['腾讯新闻', time, info, title, url])
@@ -152,7 +158,10 @@ def get_baidu_info(urls, count, website, writer, url_cnt=10, max_cnt= 10, start_
                         write_csv(writer, ['腾讯新闻', time, text, title, url])
 
                 elif(website == websites.people):
-                    info = people_info(info_url)
+                    if info_url:
+                        info = people_info(info_url)
+                    else: 
+                        info = text
                     #file.write('人民网\n')
                     if info:
                         write_csv(writer, ['人民网', time, info, title, url])
@@ -160,7 +169,10 @@ def get_baidu_info(urls, count, website, writer, url_cnt=10, max_cnt= 10, start_
                         write_csv(writer, ['人民网', time, text, title, url])
 
                 elif(website == websites.fenghuang):
-                    info = fenghuang_info(info_url)
+                    if info_url:
+                        info = fenghuang_info(info_url)
+                    else: 
+                        info = text
                     #file.write('凤凰网\n')
                     if info:
                         write_csv(writer, ['凤凰网', time, info, title, url])
@@ -168,7 +180,10 @@ def get_baidu_info(urls, count, website, writer, url_cnt=10, max_cnt= 10, start_
                         write_csv(writer, ['凤凰网', time, text, title, url])
 
                 elif(website == websites.huanqiu):
-                    info = huanqiu_info(info_url)
+                    if info_url:
+                        info = huanqiu_info(info_url)
+                    else: 
+                        info = text
                     #file.write('环球网\n')
                     if info:
                         write_csv(writer, ['环球网', time, info, title, url])
@@ -176,7 +191,10 @@ def get_baidu_info(urls, count, website, writer, url_cnt=10, max_cnt= 10, start_
                         write_csv(writer, ['环球网', time, text, title, url])
                 
                 elif(website == websites.xinhua):
-                    info = xinhua_info(url) 
+                    if info_url:
+                        info = xinhua_info(url) 
+                    else: 
+                        info = text    
                     #file.write('新华社\n')
                     if info:
                         write_csv(writer, ['新华社', time, info, title, url])       
