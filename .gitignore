@@ -1,3 +1,5 @@
-/__pycache__/*
+*/__pycache__/
+*/__pycache__/*
+app/api/__pycache__/
 /scrapy/Spider/__pycache__/*
 /scrapy/topic/*

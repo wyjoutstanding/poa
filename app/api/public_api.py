@@ -5,16 +5,14 @@ import functools
 
 # from flask import flash
 from flask import g
-# from flask import redirect
 # from flask import render_template
 from flask import session
-# from flask import url_for
-# from werkzeug.security import check_password_hash
-# from werkzeug.security import generate_password_hash
 
-# from flaskr.db import get_db
+import sys
+sys.path.append("..")
+from config import *
 
-
+from analysis import data_analysis
 # module manage: buleprint
 api_bp = Blueprint("api_bp", __name__, url_prefix="/api")
 
@@ -61,6 +59,73 @@ def get_hotspot():
     # test_data = {"hotspot": [{"url":"http://www.baidu.com", "summary":"热点时间列表"}, {"url":"http://www.baidu.com", "summary":"热点时间列表"}]}
     test_data = {"url":['url1', 'url2'], "summary":['text1', 'text2']}
     return json.dumps(test_data)
+
+@api_bp.route('/get_ranking_list/')
+def get_ranking_list():
+    '''
+    获取热搜排行榜
+
+    '''
+    # data = {
+    #     "title" : ['坚守岗位过元旦', "欢庆元旦 祝福新年", "这个元旦，我们守望平安！", "新疆：元旦佳节 官兵迎风踏雪巡逻在祖国边陲",
+    #     "中国元旦节都有哪些习俗", "元旦的来历及习俗 人民是怎样庆祝这个节日", "古诗里的元旦节"],
+    #     "hot_value" : ['99', '89', "80", "78", "76", "75", "74"]
+    # }
+    title, hot_value = data_analysis.stat_ranking_list(CSV_FILENAME_BAIDU)
+
+    data = {"title" : title, "hot_value": hot_value}
+    return json.dumps(data)
+
+@api_bp.route('/get_website_hotspot/')
+def get_website_hotspot():
+    '''
+    获取网站热度排行榜
+    统计每个网站所爬取的网页数量
+    '''
+    # data = {
+    #     "website" : ['人民网', "腾讯网", "军事网", "微博"],
+    #     "hot_value" : ['99', '89', "80", "78"]
+    # }
+    website, hot_value = data_analysis.stat_websites_hotspot(CSV_FILENAME_BAIDU)
+    data = {"website" : website, "hot_value" : hot_value}
+    return json.dumps(data)
+
+
+class jsonObj:
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+@api_bp.route('/get_word_cloud/')
+def get_word_cloud():
+    '''
+    获取话题关键词云
+    先NLP抽取关键词，再统计词频
+    '''
+    data = []
+    for i in range(5):
+        data.append(jsonObj("关键词"+str(i), str(i)).__dict__)
+    # data = {
+    #     'x':['2020-02-08','2020-04-09'], 
+    #     'y':[10,99]
+    # }
+
+    return json.dumps(data)
+
+@api_bp.route('/get_weibo_data/')
+def get_weibo_data():
+    '''
+    获取微博数据：转发，评论，点赞，拉踩量
+    '''
+    data = []
+    for i in range(5):
+        data.append(jsonObj("微博分析量关键词"+str(i), str(i)).__dict__)
+    # data = {
+    #     'x':['2020-02-08','2020-04-09'], 
+    #     'y':[10,99]
+    # }
+
+    return json.dumps(data)
 
 
 @api_bp.route('/get_analysis_data/')
