@@ -11,6 +11,9 @@ from flask import session
 import sys
 sys.path.append("..")
 from config import *
+# CSV_FILENAME_BAIDU = get_value("CSV_FILENAME_BAIDU", 'DEFUALT')
+# CSV_FILENAME_HOTSPOT = get_value('CSV_FILENAME_HOTSPOT', 'DEFUALT')
+# CSV_FILENAME_WEIBO = get_value("CSV_FILENAME_WEIBO", 'DEFUALT')
 
 from analysis import data_analysis, bd_analysis
 # module manage: buleprint
@@ -58,6 +61,7 @@ def get_hotspot():
     '''
     # test_data = {"hotspot": [{"url":"http://www.baidu.com", "summary":"热点时间列表"}, {"url":"http://www.baidu.com", "summary":"热点时间列表"}]}
     # test_data = {"url":['url1', 'url2'], "summary":['text1', 'text2']}
+    CSV_FILENAME_HOTSPOT = get_value('CSV_FILENAME_HOTSPOT', 'DEFUALT')
     topic, url, summary = data_analysis.stat_hotspot(CSV_FILENAME_HOTSPOT)
     data = {
         "topic" : topic,
@@ -77,6 +81,7 @@ def get_ranking_list():
     #     "中国元旦节都有哪些习俗", "元旦的来历及习俗 人民是怎样庆祝这个节日", "古诗里的元旦节"],
     #     "hot_value" : ['99', '89', "80", "78", "76", "75", "74"]
     # }
+    CSV_FILENAME_BAIDU = get_value("CSV_FILENAME_BAIDU", 'DEFUALT')
     title, hot_value = data_analysis.stat_ranking_list(CSV_FILENAME_BAIDU)
 
     data = {"title" : title, "hot_value": hot_value}
@@ -92,6 +97,7 @@ def get_website_hotspot():
     #     "website" : ['人民网', "腾讯网", "军事网", "微博"],
     #     "hot_value" : ['99', '89', "80", "78"]
     # }
+    CSV_FILENAME_BAIDU = get_value("CSV_FILENAME_BAIDU", 'DEFUALT')
     website, hot_value = data_analysis.stat_websites_hotspot(CSV_FILENAME_BAIDU)
     # data = {"name" : website, "value" : hot_value}
     data = {"website" : website, "hot_value" : hot_value}
@@ -103,7 +109,8 @@ def get_sentiment():
     情感分析结果
     0:负向，1:中性，2:正向
     '''
-    data = bd_analysis.stat_sentiment()
+    CSV_FILENAME_BAIDU = get_value("CSV_FILENAME_BAIDU", 'DEFUALT')
+    data = bd_analysis.stat_sentiment(CSV_FILENAME_BAIDU)
     trans = {0:"消极", 1:"中立", 2:"积极"}
     ret_data = {}
     for (k,v) in data.items():
@@ -124,8 +131,8 @@ def get_word_cloud():
     data = []
     # for i in range(5):
     #     data.append(jsonObj("关键词"+str(i), str(i)).__dict__)
-    
-    tags, values = bd_analysis.stat_keyword()
+    CSV_FILENAME_BAIDU = get_value("CSV_FILENAME_BAIDU", 'DEFUALT')
+    tags, values = bd_analysis.stat_keyword(CSV_FILENAME_BAIDU)
 
     for i in range(len(tags)):
         # data.append(jsonObj(tags[i], str(values[i])).__dict__)
@@ -149,6 +156,7 @@ def get_weibo_data():
     #     'x':['2020-02-08','2020-04-09'], 
     #     'y':[10,99]
     # }
+    CSV_FILENAME_WEIBO = get_value("CSV_FILENAME_WEIBO", 'DEFUALT')
     up_num, retweet_num, comment_num, stamp_num = data_analysis.stat_weibo_data(CSV_FILENAME_WEIBO)
 
     data = {
@@ -165,7 +173,8 @@ def get_analysis_data():
     '''
     返回分析数据
     '''
-    data = {"total_hotspot_change":{'x':['2020-02-08','2020-04-09'], 'y':[10,99]}}
+    x, y  = data_analysis.get7days()
+    data = {"total_hotspot_change":{'x':x, 'y':y}}
     return json.dumps(data)
 
 @api_bp.route('/get_report/')
