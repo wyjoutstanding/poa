@@ -151,7 +151,7 @@ class WeiboTopicScrapy():
                 weibo_content = self.get_original_weibo(info, weibo_id)
             else:
                 weibo_content = self.get_retweet(info, weibo_id)
-            #print(weibo_content)
+            print(weibo_content)
             return weibo_content
         except Exception as e:
             print('Error: ', e)
@@ -177,7 +177,7 @@ class WeiboTopicScrapy():
                                 publish_place = '无'
                         publish_place = self.deal_garbled(publish_place)
                         break
-            #print('微博发布位置: ' + publish_place)
+            print('微博发布位置: ' + publish_place)
             return publish_place
         except Exception as e:
             print('Error: ', e)
@@ -208,7 +208,7 @@ class WeiboTopicScrapy():
                 publish_time = year + '-' + month + '-' + day + ' ' + time
             else:
                 publish_time = publish_time[:16]
-            #print('微博发布时间: ' + publish_time)
+            print('微博发布时间: ' + publish_time)
             return publish_time
         except Exception as e:
             print('Error: ', e)
@@ -223,7 +223,7 @@ class WeiboTopicScrapy():
                 publish_tool = str_time.split(u'来自')[1]
             else:
                 publish_tool = '无'
-            #print('微博发布工具: ' + publish_tool)
+            print('微博发布工具: ' + publish_tool)
             return publish_tool
         except Exception as e:
             print('Error: ', e)
@@ -240,15 +240,15 @@ class WeiboTopicScrapy():
             weibo_footer = re.findall(pattern, str_footer, re.M)
 
             up_num = int(weibo_footer[0])
-            #print('点赞数: ' + str(up_num))
+            print('点赞数: ' + str(up_num))
             footer['up_num'] = up_num
 
             retweet_num = int(weibo_footer[1])
-            #print('转发数: ' + str(retweet_num))
+            print('转发数: ' + str(retweet_num))
             footer['retweet_num'] = retweet_num
 
             comment_num = int(weibo_footer[2])
-            #print('评论数: ' + str(comment_num))
+            print('评论数: ' + str(comment_num))
             footer['comment_num'] = comment_num
             return footer
         except Exception as e:
@@ -256,7 +256,7 @@ class WeiboTopicScrapy():
             traceback.print_exc()
 
     def extract_picture_urls(self, info, weibo_id):
-        #print('开始提取图片 URL')
+        print('开始提取图片 URL')
         """提取微博原始图片url"""
         try:
             a_list = info.xpath('./div/a/@href')
@@ -269,7 +269,7 @@ class WeiboTopicScrapy():
                     for p in preview_picture_list
                 ]
                 picture_urls = ','.join(picture_list)
-                #print(picture_urls)
+                print(picture_urls)
             else:
                 picture_urls = '无'
                 # return picture_urls
@@ -428,7 +428,7 @@ class WeiboTopicScrapy():
         pageNum = self.limit_number
 
         for page in range(1, pageNum):
-            #print('\n\n第{}页....\n'.format(page))
+            print('\n\n第{}页....\n'.format(page))
             Referer = 'https://weibo.cn/search/mblog?hideSearchFrame=&keyword={}&page={}'.format(quote(self.keyword),page - 1)
             headers = {
                 'Cookie': Cookie,
@@ -447,13 +447,13 @@ class WeiboTopicScrapy():
             
             #res = requests.get(url='https://weibo.cn/search/mblog')
             #res.encoding='utf-8'
-            #print("keyword:",self.keyword)
+            print("keyword:",self.keyword)
             res = requests.get(url='https://weibo.cn/search/mblog', params=params, headers=headers)
             #res.encoding='utf-8'
             global Source
             Source=res.url
-            #print("URL正确编码：",Source)
-            #print("文本编码:",res.encoding)
+            print("URL正确编码：",Source)
+            print("文本编码:",res.encoding)
             html = etree.HTML(res.text.encode('utf-8'))
             
             try:
@@ -470,7 +470,7 @@ class WeiboTopicScrapy():
                     if aweibo:
                         self.weibo.append(aweibo)
                         self.got_num += 1
-                        #print('-' * 100)
+                        print('-' * 100)
 
                 if page % 3 == 0 and self.got_num > wrote_num:  # 每爬3页写入一次文件
                     self.write_csv(wrote_num)
@@ -529,14 +529,14 @@ DEFAULT_START_TIME = datetime.now() - timedelta(days=30)
 DEFAULT_END_TIME = datetime.now()  
   
 def sina_crawl(keys, url_cnt=10, start_time=DEFAULT_START_TIME, end_time=DEFAULT_END_TIME): 
-    #print("start_time:",DEFAULT_START_TIME)
+    print("start_time:",DEFAULT_START_TIME)
     global Sensitive_word
     Sensitive_word=keys
     WeiboTopicScrapy(keyword=keys, filter=1, start_time=start_time.strftime('%Y-%m-%d-%H'), end_time=end_time.strftime('%Y-%m-%d-%H'),limit_numbers=url_cnt)
     filepath="topic/"+keys+'.csv'
-    #print(filepath)
+    print(filepath)
     out = process_sina(filepath)
-    #print(out)
+    print(out)
     return out
 def process_sina(filepath):
     file_path =filepath
@@ -559,6 +559,6 @@ def process_sina(filepath):
 if __name__ == '__main__':
     # filter = 0 爬取所有微博，filter = 1 爬取原创微博
     keyword = '元旦'
-    #print("start_time:",DEFAULT_START_TIME.strftime('%Y-%m-%d-%H'))
+    print("start_time:",DEFAULT_START_TIME.strftime('%Y-%m-%d-%H'))
     sina_crawl(keys=keyword, url_cnt=4, start_time=DEFAULT_START_TIME, end_time=DEFAULT_END_TIME)
     

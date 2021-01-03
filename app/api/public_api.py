@@ -12,7 +12,7 @@ import sys
 sys.path.append("..")
 from config import *
 
-from analysis import data_analysis
+from analysis import data_analysis, bd_analysis
 # module manage: buleprint
 api_bp = Blueprint("api_bp", __name__, url_prefix="/api")
 
@@ -93,6 +93,7 @@ def get_website_hotspot():
     #     "hot_value" : ['99', '89', "80", "78"]
     # }
     website, hot_value = data_analysis.stat_websites_hotspot(CSV_FILENAME_BAIDU)
+    # data = {"name" : website, "value" : hot_value}
     data = {"website" : website, "hot_value" : hot_value}
     return json.dumps(data)
 
@@ -109,8 +110,13 @@ def get_word_cloud():
     先NLP抽取关键词，再统计词频
     '''
     data = []
-    for i in range(5):
-        data.append(jsonObj("关键词"+str(i), str(i)).__dict__)
+    # for i in range(5):
+    #     data.append(jsonObj("关键词"+str(i), str(i)).__dict__)
+    
+    tags, values = bd_analysis.stat_keyword()
+
+    for i in range(len(tags)):
+        data.append(jsonObj(tags[i], str(values[i])).__dict__)
     # data = {
     #     'x':['2020-02-08','2020-04-09'], 
     #     'y':[10,99]
