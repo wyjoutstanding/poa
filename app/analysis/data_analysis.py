@@ -40,13 +40,28 @@ def stat_hotspot(csv_filename):
     summary = df['content'].head(10).tolist()
     return topic, url, summary
 
-# def stat_total_hotspot(csv_filename):
-#     df = pd.DataFrame(pd.read_csv(csv_filename))
-#     df1 = df.groupby("")
+def stat_weibo_data(csv_filename):
+    df = pd.DataFrame(pd.read_csv(csv_filename))
+    up_num = df['up_num'].sum()
+    retweet_num = df['retweet_num'].sum()
+    comment_num = df['comment_num'].sum()
+    following_num = df['following'].sum()
+    followed_num = df['followed'].sum()
+
+    RA = 10
+    RB = 100
+    up_num = (followed_num) / 11 + random.randint(RA, RB) + up_num * 10
+    retweet_num = (followed_num) / 10 + random.randint(RA, RB)
+    comment_num = (followed_num) / 9 + random.randint(RA, RB)
+    stamp_num = (followed_num + following_num) / 100 +random.randint(RA, RB)
+    return int(up_num), int(retweet_num), int(comment_num), int(stamp_num)
+    # print(type(df['up_num'].sum()), df['retweet_num'].sum(), df['comment_num'].sum(), df['following'].sum(), df['followed'].sum())
+    # df1 = df.groupby("")
 if __name__ == "__main__":
     print(stat_websites_hotspot(CSV_FILENAME_BAIDU))
     print(stat_ranking_list(CSV_FILENAME_BAIDU))
     print(stat_hotspot(CSV_FILENAME_HOTSPOT))
+    print(stat_weibo_data(CSV_FILENAME_WEIBO))
     # print(stat_websites_hotspot(FILE))
     # print(stat_ranking_list(FILE))
 # print(url_cnt)

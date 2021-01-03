@@ -36,6 +36,8 @@ COMMENT_TAG_URL = "https://aip.baidubce.com/rpc/2.0/nlp/v2/comment_tag"
 # 关键词提取
 KEYWORD_URL = "https://aip.baidubce.com/rpc/2.0/nlp/v1/keyword"
 
+SENTIMENT_CLASSIFY_URL = 'https://aip.baidubce.com/rpc/2.0/nlp/v1/sentiment_classify'
+
 """  TOKEN start """
 TOKEN_URL = 'https://aip.baidubce.com/oauth/2.0/token'
 
@@ -152,9 +154,9 @@ def get_keywords(url, title, content):
     data = json.loads(response)
     if "error_code" not in data or data["error_code"] == 0:
         # print("get_keyword ok")
-        pass
-        # for item in data["items"]:
-        #     print('tag: {}, score: {}'.format(item['tag'], item['score']))
+        # pass
+        for item in data["items"]:
+            print('tag: {}, score: {}'.format(item['tag'], item['score']))
     else:
         # print error response
         print(response)
@@ -166,6 +168,8 @@ import pandas as pd
 import sys
 sys.path.append("..")
 from config import *
+from global_data import *
+
 def stat_keyword():
     # title = "iphone手机出现“白苹果”原因及解决办法，用苹果手机的可以看下"
     # content = "如果下面的方法还是没有解决你的问题建议来我们门店看下成都市锦江区红星路三段99号银石广场24层01室。在通电的情况下掉进清水，这种情况一不需要拆机处理。尽快断电。用力甩干，但别把机器甩掉，主意要把屏幕内的水甩出来。如果屏幕残留有水滴，干后会有痕迹。^H3 放在台灯，射灯等轻微热源下让水分慢慢散去。"
@@ -193,13 +197,66 @@ def stat_keyword():
 
         for it in items:
             cnts[it['tag']] = cnts.get(it['tag'], 0) + it['score']
-        time.sleep(0.4)
+        time.sleep(0.6)
         # get_keywords(url, title, content)
     
     # print(cnts.keys(), cnts.values())
     return list(cnts.keys()), list(cnts.values())
     # return cnts
+
+def get_sentiment(url, text):
+    response = request(url, json.dumps(
+    {
+        "text": text 
+    }))
+    data = json.loads(response)
+    if "error_code" not in data or data["error_code"] == 0:
+        # print("get_keyword ok")
+        # pass
+        for item in data["items"]:
+            print('sentiment: {}'.format(item['sentiment']))
+    else:
+        # print error response
+        print(response)
+    
+    return data['items']
+
+def stat_sentiment():
+    token = TOKEN_BAIDU
+
+    url = SENTIMENT_CLASSIFY_URL + "?charset=UTF-8&access_token=" + token
+
+    text = "苹果是一家伟大的公司"
+
+    df = pd.DataFrame(pd.read_csv(CSV_FILENAME_BAIDU))
+    # titles = df['topic'].tolist()
+    contents = df['content'].tolist()
+
+    cnts = {}
+    val_cnt = 0
+    MAX_CNT = 20
+    for i in range(len(contents)):
+        if contents[i] == "" or contents[i] == None:
+            continue
+        # print(len(contents[i]), type(contents[i]))
+        items = get_sentiment(url, contents[i][0:1010])
+        val_cnt = val_cnt + 1
+        if val_cnt == MAX_CNT:
+            break
+        
+        for it in items:
+            cnts[it['sentiment']] = cnts.get(it['sentiment'], 0) + it['confidence']
+            # cnts[it['tag']] = cnts.get(it['tag'], 0) + it['score']
+        time.sleep(0.6)
+    # get_sentiment(url, text)
+    # print(cnts)
+    # GLOBAL_SENTIMENT_CNT = cnts
+    # 0:负向，1:中性，2:正向
+    return cnts
+
+
 if __name__ == '__main__':
     # cnt = {'A':12, 'B':12}
     # print(list(cnt.keys()))
-    stat_keyword()
+    # stat_keyword()
+    print(stat_sentiment())

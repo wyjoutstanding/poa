@@ -44,9 +44,9 @@ def search_theme():
         bgn_time = json_data.get('bgn_time')
         end_time = json_data.get('end_time')
 
-        # print(keywords, categories, bgn_time, end_time)
+        print(keywords, categories, bgn_time, end_time)
 
-        return 'POST'
+        return keywords
     else:
         return 'api_search_theme error'
 
@@ -97,6 +97,18 @@ def get_website_hotspot():
     data = {"website" : website, "hot_value" : hot_value}
     return json.dumps(data)
 
+@api_bp.route('/get_sentiment/')
+def get_sentiment():
+    '''
+    情感分析结果
+    0:负向，1:中性，2:正向
+    '''
+    data = bd_analysis.stat_sentiment()
+    trans = {0:"消极", 1:"中立", 2:"积极"}
+    ret_data = {}
+    for (k,v) in data.items():
+        ret_data[trans[k]] = v
+    return json.dumps(ret_data)
 
 class jsonObj:
     def __init__(self, name, value):
@@ -116,7 +128,8 @@ def get_word_cloud():
     tags, values = bd_analysis.stat_keyword()
 
     for i in range(len(tags)):
-        data.append(jsonObj(tags[i], str(values[i])).__dict__)
+        # data.append(jsonObj(tags[i], str(values[i])).__dict__)
+        data.append({"name": tags[i], "value": values[i]})
     # data = {
     #     'x':['2020-02-08','2020-04-09'], 
     #     'y':[10,99]
@@ -129,14 +142,21 @@ def get_weibo_data():
     '''
     获取微博数据：转发，评论，点赞，拉踩量
     '''
-    data = []
-    for i in range(5):
-        data.append(jsonObj("微博分析量关键词"+str(i), str(i)).__dict__)
+    # data = []
+    # for i in range(5):
+    #     data.append(jsonObj("微博分析量关键词"+str(i), str(i)).__dict__)
     # data = {
     #     'x':['2020-02-08','2020-04-09'], 
     #     'y':[10,99]
     # }
+    up_num, retweet_num, comment_num, stamp_num = data_analysis.stat_weibo_data(CSV_FILENAME_WEIBO)
 
+    data = {
+        "点赞量": up_num,
+        "转发量": retweet_num,
+        "评论量": comment_num,
+        "拉踩量": stamp_num
+    }
     return json.dumps(data)
 
 
