@@ -32,6 +32,14 @@ def hello_word():
 global DEFAULT
 DEFAULT = '科比'
 
+def update_filename_path(key):
+    DIR = cfg.get_value('CSV_FILENAME_BAIDU_DIR', 'NULL')
+    cfg.set_value('CSV_FILENAME_BAIDU', DIR + key + '.csv')
+    DIR = cfg.get_value('CSV_FILENAME_HOTSPOT_DIR', 'NULL')
+    cfg.set_value('CSV_FILENAME_HOTSPOT', DIR + key + '_TOP10.csv')
+    DIR = cfg.get_value('CSV_FILENAME_WEIBO_DIR', 'NULL')
+    cfg.set_value('CSV_FILENAME_WEIBO', DIR + key + '_WEIBO.csv')
+
 @api_bp.route('/search/', methods=['POST'])
 def search_theme():
     '''
@@ -63,6 +71,8 @@ def search_theme():
         if keywords != DEFAULT:
             craw_topTen(keywords)
             print("-----CRAW TOPTEN------")
+        
+        update_filename_path(keywords)
 
         return get_hotspot()
     else:

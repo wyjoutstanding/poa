@@ -43,7 +43,7 @@ def global_data_init():
     # KEYWORDS = '元旦'
     # 百度默认数据
     # CSV_FILENAME_BAIDU = CSV_FILENAME_BAIDU_DIR + "元旦.csv"
-    cfg.set_value("CSV_FILENAME_BAIDU" , CSV_FILENAME_BAIDU_DIR + ".csv")
+    cfg.set_value("CSV_FILENAME_BAIDU" , CSV_FILENAME_BAIDU_DIR + DEFAULT_NAME + ".csv")
     # 焦点排序的数据
     # CSV_FILENAME_HOTSPOT = CSV_FILENAME_HOTSPOT_DIR + "元旦_TOP10.csv"
     cfg.set_value("CSV_FILENAME_HOTSPOT", CSV_FILENAME_HOTSPOT_DIR + DEFAULT_NAME + "_TOP10.csv")
