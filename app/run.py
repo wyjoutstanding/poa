@@ -8,10 +8,15 @@ app = Flask(__name__)
 # 跨域处理
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-import config
+import config as cfg
 
-app.config['SECRET_KEY'] = config.SECRET_KEY
+# app.config['SECRET_KEY'] = config.SECRET_KEY
+app.config['SECRET_KEY'] = cfg.SECRET_KEY
 
+import sys
+# sys.path.append("..")
+sys.path.append("./craw/")
+# sys.path.append("../craw/Spider/")
 from auth import auth
 from api import public_api
 
@@ -21,6 +26,7 @@ app.register_blueprint(public_api.api_bp)
 import global_init
 
 if __name__ == "__main__":
-    config._init() # 全局数据配置
+    cfg._init() # 全局数据配置
+    print(cfg._global_dict)
     global_init.global_data_init()
     app.run(host='0.0.0.0', debug=True)

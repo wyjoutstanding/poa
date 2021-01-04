@@ -10,10 +10,15 @@ from flask import session
 
 import sys
 sys.path.append("..")
-from config import *
-# CSV_FILENAME_BAIDU = get_value("CSV_FILENAME_BAIDU", 'DEFUALT')
-# CSV_FILENAME_HOTSPOT = get_value('CSV_FILENAME_HOTSPOT', 'DEFUALT')
-# CSV_FILENAME_WEIBO = get_value("CSV_FILENAME_WEIBO", 'DEFUALT')
+sys.path.append("../craw/")
+sys.path.append("../craw/Spider/")
+# from config import *
+import config as cfg
+
+from craw.craw import craw_start, craw_topTen
+# CSV_FILENAME_BAIDU = cfg.get_value("CSV_FILENAME_BAIDU", 'DEFUALT')
+# CSV_FILENAME_HOTSPOT = cfg.get_value('CSV_FILENAME_HOTSPOT', 'DEFUALT')
+# CSV_FILENAME_WEIBO = cfg.get_value("CSV_FILENAME_WEIBO", 'DEFUALT')
 
 from analysis import data_analysis, bd_analysis
 # module manage: buleprint
@@ -48,11 +53,23 @@ def search_theme():
         end_time = json_data.get('end_time')
 
         print(keywords, categories, bgn_time, end_time)
+        # if cfg.get_value("KEYWORDS", "") != "":
+        cfg.set_value('KEYWORDS', keywords)
+        print('craw_topTen')
+        print(cfg.get_value('KEYWORDS'), cfg._global_dict)
+        craw_topTen(keywords)
 
-        return keywords
+
+        return get_hotspot()
     else:
         return 'api_search_theme error'
 
+@api_bp.route('/set_craw_start/')
+def set_craw_start():
+    KEYWORDS = cfg.get_value('KEYWORDS', "北京")
+    print(KEYWORDS, cfg._global_dict)
+    craw_start(KEYWORDS)
+    return "Start Craw OK"
 
 @api_bp.route('/get_hotspot/')
 def get_hotspot():
@@ -61,13 +78,20 @@ def get_hotspot():
     '''
     # test_data = {"hotspot": [{"url":"http://www.baidu.com", "summary":"热点时间列表"}, {"url":"http://www.baidu.com", "summary":"热点时间列表"}]}
     # test_data = {"url":['url1', 'url2'], "summary":['text1', 'text2']}
-    CSV_FILENAME_HOTSPOT = get_value('CSV_FILENAME_HOTSPOT', 'DEFUALT')
+    CSV_FILENAME_HOTSPOT = cfg.get_value('CSV_FILENAME_HOTSPOT', 'DEFUALT')
     topic, url, summary = data_analysis.stat_hotspot(CSV_FILENAME_HOTSPOT)
-    data = {
-        "topic" : topic,
-        "url": url,
-        "summary": summary
-    }
+    data = []
+    for i in range(len(url)):
+        data.append({
+            "topic" : topic[i],
+            "summary" : summary[i],
+            "url": url[i]
+        })
+    # data = {
+    #     "topic" : topic,
+    #     "url": url,
+    #     "summary": summary
+    # }
     return json.dumps(data)
 
 @api_bp.route('/get_ranking_list/')
@@ -81,7 +105,7 @@ def get_ranking_list():
     #     "中国元旦节都有哪些习俗", "元旦的来历及习俗 人民是怎样庆祝这个节日", "古诗里的元旦节"],
     #     "hot_value" : ['99', '89', "80", "78", "76", "75", "74"]
     # }
-    CSV_FILENAME_BAIDU = get_value("CSV_FILENAME_BAIDU", 'DEFUALT')
+    CSV_FILENAME_BAIDU = cfg.get_value("CSV_FILENAME_BAIDU", 'DEFUALT')
     title, hot_value = data_analysis.stat_ranking_list(CSV_FILENAME_BAIDU)
 
     data = {"title" : title, "hot_value": hot_value}
@@ -97,7 +121,7 @@ def get_website_hotspot():
     #     "website" : ['人民网', "腾讯网", "军事网", "微博"],
     #     "hot_value" : ['99', '89', "80", "78"]
     # }
-    CSV_FILENAME_BAIDU = get_value("CSV_FILENAME_BAIDU", 'DEFUALT')
+    CSV_FILENAME_BAIDU = cfg.get_value("CSV_FILENAME_BAIDU", 'DEFUALT')
     website, hot_value = data_analysis.stat_websites_hotspot(CSV_FILENAME_BAIDU)
     # data = {"name" : website, "value" : hot_value}
     data = {"website" : website, "hot_value" : hot_value}
@@ -109,7 +133,7 @@ def get_sentiment():
     情感分析结果
     0:负向，1:中性，2:正向
     '''
-    CSV_FILENAME_BAIDU = get_value("CSV_FILENAME_BAIDU", 'DEFUALT')
+    CSV_FILENAME_BAIDU = cfg.get_value("CSV_FILENAME_BAIDU", 'DEFUALT')
     data = bd_analysis.stat_sentiment(CSV_FILENAME_BAIDU)
     trans = {0:"消极", 1:"中立", 2:"积极"}
     ret_data = {}
@@ -131,7 +155,7 @@ def get_word_cloud():
     data = []
     # for i in range(5):
     #     data.append(jsonObj("关键词"+str(i), str(i)).__dict__)
-    CSV_FILENAME_BAIDU = get_value("CSV_FILENAME_BAIDU", 'DEFUALT')
+    CSV_FILENAME_BAIDU = cfg.get_value("CSV_FILENAME_BAIDU", 'DEFUALT')
     tags, values = bd_analysis.stat_keyword(CSV_FILENAME_BAIDU)
 
     for i in range(len(tags)):
@@ -156,7 +180,7 @@ def get_weibo_data():
     #     'x':['2020-02-08','2020-04-09'], 
     #     'y':[10,99]
     # }
-    CSV_FILENAME_WEIBO = get_value("CSV_FILENAME_WEIBO", 'DEFUALT')
+    CSV_FILENAME_WEIBO = cfg.get_value("CSV_FILENAME_WEIBO", 'DEFUALT')
     up_num, retweet_num, comment_num, stamp_num = data_analysis.stat_weibo_data(CSV_FILENAME_WEIBO)
 
     data = {
