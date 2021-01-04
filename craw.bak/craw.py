@@ -7,7 +7,10 @@ import csv
 import os
 
 
-
+import sys
+sys.path.append("..")
+import app.config as cfg
+# from app.config import *
 
 class MyThread(threading.Thread):
 
@@ -24,6 +27,59 @@ class MyThread(threading.Thread):
             return self.result  # 如果子线程不使用join方法，此处可能会报没有self.result的错误
         except Exception:
             return None
+
+
+def craw_baidu(key):
+    t = []
+    fname = []
+    t.append( MyThread(baidu_crawl, args=(key, websites.bajiahao, 10, 40)) )
+    fname.append(key+websites.bajiahao+".tmp")
+    t.append( MyThread(baidu_crawl, args=(key, websites.qq, 10, 40)) )
+    fname.append(key+websites.qq+".tmp")
+    t.append( MyThread(baidu_crawl, args=(key, websites.people, 10, 40)) )
+    fname.append(key+websites.people+".tmp")
+    t.append( MyThread(baidu_crawl, args=(key, websites.fenghuang, 10, 40)) )
+    fname.append(key+websites.fenghuang+".tmp")
+    t.append( MyThread(baidu_crawl, args=(key, websites.xinhua, 10, 40)) )
+    fname.append(key+websites.xinhua+".tmp")  
+    t.append( MyThread(baidu_crawl, args=(key, websites.huanqiu, 10, 40)) )
+    fname.append(key+websites.huanqiu+".tmp")
+
+
+    for ti in t:
+        ti.start()
+        sleep(5)
+
+    for ti in t:
+        ti.join()
+        print( ti.get_result())
+        print("_______________________________________")
+
+    file = open(key + ".csv","w+", encoding='utf-8')
+    writer = csv.writer(file)
+    csvTool.write_csv(writer)
+
+    for i in fname:
+        f = open (i, "r", encoding='UTF-8')
+        if f:
+            for l in f:
+                file.write(l)
+            f.close()
+            os.remove(i)
+            
+    file.close()
+
+    DIR = cfg.get_value('CSV_FILENAME_BAIDU_DIR')
+    cfg.set_value('CSV_FILENAME_BAIDU_DIR', DIR + key + '.csv')
+
+def craw_topTen(key):
+    topTen(key)
+    print(cfg._global_dict)
+    DIR = cfg.get_value('CSV_FILENAME_HOTSPOT_DIR')
+    cfg.set_value('CSV_FILENAME_HOTSPOT', DIR + key + '_TOP10.csv')
+
+def craw_start(key):
+    craw_baidu(key)
 
 
 if __name__ == "__main__":
