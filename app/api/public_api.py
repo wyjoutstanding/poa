@@ -68,11 +68,16 @@ def search_theme():
         # print(cfg.get_value('KEYWORDS'), cfg._global_dict)
         global DEFAULT
         DEFAULT = cfg.get_value('DEFAULT_NAME')
-        if keywords != DEFAULT:
+        KEYWORD_LIST = cfg.get_value('KEYWORD_LIST', [DEFAULT])
+
+        print('[search KEYWORD_LIST]: ', KEYWORD_LIST)
+
+        update_filename_path(keywords)
+
+        if not keywords in KEYWORD_LIST:
             craw_topTen(keywords)
             print("-----CRAW TOPTEN------")
-        
-        update_filename_path(keywords)
+
 
         return get_hotspot()
     else:
@@ -80,9 +85,13 @@ def search_theme():
 
 @api_bp.route('/set_craw_start/')
 def set_craw_start():
+    DEFAULT = cfg.get_value('DEFAULT_NAME')
     KEYWORDS = cfg.get_value('KEYWORDS', DEFAULT)
+    update_filename_path(KEYWORDS)
+
     print('set_craw_start=', KEYWORDS, cfg._global_dict)
-    if KEYWORDS != DEFAULT:
+    KEYWORD_LIST = cfg.get_value('KEYWORD_LIST', [DEFAULT])
+    if not KEYWORDS in KEYWORD_LIST:
         craw_start(KEYWORDS)
     return "Start Craw OK"
 
@@ -179,7 +188,7 @@ def get_word_cloud():
         # data.append(jsonObj(tags[i], str(values[i])).__dict__)
         data.append({"name": tags[i], "value": values[i]})
     # data = {
-    #     'x':['2020-02-08','2020-04-09'], 
+    #     'x':['2020-02-08','2020-04-09'],
     #     'y':[10,99]
     # }
 
@@ -194,7 +203,7 @@ def get_weibo_data():
     # for i in range(5):
     #     data.append(jsonObj("微博分析量关键词"+str(i), str(i)).__dict__)
     # data = {
-    #     'x':['2020-02-08','2020-04-09'], 
+    #     'x':['2020-02-08','2020-04-09'],
     #     'y':[10,99]
     # }
     CSV_FILENAME_WEIBO = cfg.get_value("CSV_FILENAME_WEIBO", DEFAULT)

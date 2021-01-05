@@ -35,7 +35,7 @@ def global_data_init():
     cfg.set_value("CSV_FILENAME_HOTSPOT_DIR", CSV_FILENAME_HOTSPOT_DIR)
     cfg.set_value("CSV_FILENAME_WEIBO_DIR", CSV_FILENAME_WEIBO_DIR)
     print(CSV_FILENAME_BAIDU_DIR, CSV_FILENAME_HOTSPOT_DIR, CSV_FILENAME_WEIBO_DIR)
-    
+
     # 默认值设置
     cfg.set_value('DEFAULT_NAME', '科比')
     DEFAULT_NAME = cfg.get_value('DEFAULT_NAME')
@@ -52,7 +52,8 @@ def global_data_init():
     cfg.set_value("CSV_FILENAME_WEIBO", CSV_FILENAME_WEIBO_DIR + DEFAULT_NAME + "_WEIBO.csv")
 
     KEYWORD_LIST = get_keyword_list('data.txt')
-    print(KEYWORD_LIST)
+    cfg.set_value('KEYWORD_LIST', KEYWORD_LIST)
+    print('read KEYWORD_LIST: ', KEYWORD_LIST)
 
 if __name__ == "__main__":
     get_keyword_list('data.txt')
