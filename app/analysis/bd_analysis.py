@@ -47,8 +47,8 @@ TOKEN_URL = 'https://aip.baidubce.com/oauth/2.0/token'
 """
 def fetch_token():
     params = {'grant_type': 'client_credentials',
-              'client_id': API_KEY,
-              'client_secret': SECRET_KEY}
+            'client_id': API_KEY,
+            'client_secret': SECRET_KEY}
     post_data = urlencode(params)
     if (IS_PY3):
         post_data = post_data.encode('utf-8')
@@ -86,11 +86,11 @@ def make_request(url, comment):
     print("\n评论观点：")
 
     response = request(url, json.dumps(
-    {
-        "text": comment,
-        # 13为3C手机类型评论，其他类别评论请参考 https://ai.baidu.com/docs#/NLP-Apply-API/09fc895f
-        "type": 13
-    }))
+        {
+            "text": comment,
+            # 13为3C手机类型评论，其他类别评论请参考 https://ai.baidu.com/docs#/NLP-Apply-API/09fc895f
+            "type": 13
+            }))
 
     data = json.loads(response)
 
@@ -145,22 +145,25 @@ def test_comment_tag():
 
 
 def get_keywords(url, title, content):
+    while True:
+        response = request(url, json.dumps(
+            {
+                "title": title,
+                "content": content
+                }))
+        data = json.loads(response)
+        if "error_code" not in data or data["error_code"] == 0:
+            # print("get_keyword ok")
+            # pass
+            for item in data["items"]:
+                print('tag: {}, score: {}'.format(item['tag'], item['score']))
+            break
+        else:
+            # print error response
+            print(response)
+            time.sleep(1)
+            continue
 
-    response = request(url, json.dumps(
-    {
-        "title": title,
-        "content": content 
-    }))
-    data = json.loads(response)
-    if "error_code" not in data or data["error_code"] == 0:
-        # print("get_keyword ok")
-        # pass
-        for item in data["items"]:
-            print('tag: {}, score: {}'.format(item['tag'], item['score']))
-    else:
-        # print error response
-        print(response)
-    
     return data['items']
 
 
@@ -202,26 +205,30 @@ def stat_keyword(csv_filename):
             cnts[it['tag']] = cnts.get(it['tag'], 0) + it['score']
         time.sleep(0.6)
         # get_keywords(url, title, content)
-    
+
     # print(cnts.keys(), cnts.values())
     return list(cnts.keys()), list(cnts.values())
-    # return cnts
+# return cnts
 
 def get_sentiment(url, text):
-    response = request(url, json.dumps(
-    {
-        "text": text 
-    }))
-    data = json.loads(response)
-    if "error_code" not in data or data["error_code"] == 0:
-        # print("get_keyword ok")
-        # pass
-        for item in data["items"]:
-            print('sentiment: {}'.format(item['sentiment']))
-    else:
-        # print error response
-        print(response)
-    
+    while True:
+        response = request(url, json.dumps(
+            {
+                "text": text
+                }))
+        data = json.loads(response)
+        if "error_code" not in data or data["error_code"] == 0:
+            # print("get_keyword ok")
+            # pass
+            for item in data["items"]:
+                 print('sentiment: {}'.format(item['sentiment']))
+            break
+        else:
+            # print error response
+            print(response)
+            time.sleep(1)
+            continue
+
     return data['items']
 
 def stat_sentiment(csv_filename):
@@ -246,7 +253,7 @@ def stat_sentiment(csv_filename):
         val_cnt = val_cnt + 1
         if val_cnt == MAX_CNT:
             break
-        
+
         for it in items:
             cnts[it['sentiment']] = cnts.get(it['sentiment'], 0) + it['confidence']
             # cnts[it['tag']] = cnts.get(it['tag'], 0) + it['score']
